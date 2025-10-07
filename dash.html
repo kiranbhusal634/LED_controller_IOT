@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT LED Control Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .dashboard {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .status {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+        .status.on {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.off {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            font-size: 16px;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-on {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-on:hover {
+            background-color: #218838;
+        }
+        .btn-off {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-off:hover {
+            background-color: #c82333;
+        }
+        .btn-on:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .btn-off:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>LED Control Dashboard</h1>
+        <div id="status" class="status">Status: Unknown</div>
+        <button id="btnOn" class="btn-on">Turn ON</button>
+        <button id="btnOff" class="btn-off">Turn OFF</button>
+    </div>
+
+    <script>
+        // Assume your IoT device server is running on the same host (e.g., http://192.168.1.100 or localhost)
+        // Update the base URL below if needed (e.g., const BASE_URL = 'http://your-device-ip:port';)
+        const BASE_URL = window.location.origin; // Uses current host/port for simplicity
+
+        let currentStatus = 'unknown';
+
+        // Function to update status display
+        function updateStatus(status) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = `Status: ${status.toUpperCase()}`;
+            statusEl.className = `status ${status}`;
+            currentStatus = status;
+
+            // Update button states (optional: disable the active button)
+            document.getElementById('btnOn').disabled = status === 'on';
+            document.getElementById('btnOff').disabled = status === 'off';
+        }
+
+        // Function to send request to turn LED on
+        async function turnOn() {
+            try {
+                const response = await fetch(`${BASE_URL}/led/on`);
+                if (response.ok) {
+                    updateStatus('on');
+                } else {
+                    alert('Failed to turn on LED');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Function to send request to turn LED off
+        async function turnOff() {
+            try {
+                const response = await fetch(`${BASE_URL}/led/off`);
+                if (response.ok) {
+                    updateStatus('off');
+                } else {
+                    alert('Failed to turn off LED');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('btnOn').addEventListener('click', turnOn);
+        document.getElementById('btnOff').addEventListener('click', turnOff);
+
+        // Optional: Fetch initial status on load (if your server has a /led/status endpoint)
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`${BASE_URL}/led/status`);
+                if (response.ok) {
+                    const data = await response.text(); // Assuming plain text response like "on" or "off"
+                    updateStatus(data.trim());
+                }
+            } catch (error) {
+                // If no status endpoint, default to 'off'
+                updateStatus('off');
+            }
+        }
+
+        // Load initial status when page loads
+        fetchStatus();
+    </script>
+</body>
+</html>
